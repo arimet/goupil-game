@@ -13,6 +13,12 @@ import { OralScreen } from './screens/OralScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import { PuzzleSetupScreen } from './screens/PuzzleSetupScreen';
 import { PuzzleGameScreen } from './screens/PuzzleGameScreen';
+import { MazeScreen } from './screens/MazeScreen';
+import { SimonScreen } from './screens/SimonScreen';
+import { CountingSetupScreen } from './screens/CountingSetupScreen';
+import { CountingGameScreen } from './screens/CountingGameScreen';
+import { MemorySetupScreen } from './screens/MemorySetupScreen';
+import { MemoryGameScreen } from './screens/MemoryGameScreen';
 import type { LetterCard } from './srs/LetterCard';
 import { MAX_CHOICES } from './utils/constants';
 
@@ -77,7 +83,7 @@ const appEl = document.getElementById('app')!;
 // Screen manager
 const screenManager = new ScreenManager(appEl);
 
-// Session state
+// Session state (for alphabet modes)
 let sessionCards: LetterCard[] = [];
 let sessionIndex = 0;
 let sessionStars = 0;
@@ -85,13 +91,36 @@ let currentMode: GameMode = 'quiz';
 let sessionActive = false;
 
 function startSession(mode: GameMode) {
-  if (mode === 'puzzle') {
+  showBackButton();
+
+  // Canvas-based games hide the 3D scene
+  if (['puzzle', 'maze'].includes(mode)) {
     hideScene();
-    showBackButton();
+  }
+
+  // Games with their own setup screens
+  if (mode === 'puzzle') {
     screenManager.navigate('puzzle-setup');
     return;
   }
+  if (mode === 'maze') {
+    screenManager.navigate('maze');
+    return;
+  }
+  if (mode === 'simon') {
+    screenManager.navigate('simon');
+    return;
+  }
+  if (mode === 'counting') {
+    screenManager.navigate('counting-setup');
+    return;
+  }
+  if (mode === 'memory') {
+    screenManager.navigate('memory-setup');
+    return;
+  }
 
+  // Alphabet modes (quiz / oral)
   currentMode = mode;
   sessionCards = srsEngine.getSessionCards();
   sessionIndex = 0;
@@ -105,7 +134,6 @@ function startSession(mode: GameMode) {
   sessionActive = true;
   starCounter.setCount(0);
   starCounter.show();
-  showBackButton();
   advanceSession();
 }
 
@@ -138,7 +166,8 @@ function onAnswer(correct: boolean) {
   advanceSession();
 }
 
-// Screens
+// --- Screens ---
+
 const welcomeScreen = new WelcomeScreen(appEl, fox, startSession);
 
 const quizScreen = new QuizScreen(
@@ -151,10 +180,7 @@ const oralScreen = new OralScreen(
 
 const resultScreen = new ResultScreen(appEl, fox, particles,
   () => screenManager.navigate('welcome'),
-  () => {
-    starCounter.hide();
-    screenManager.navigate('welcome');
-  },
+  () => { starCounter.hide(); screenManager.navigate('welcome'); },
 );
 
 const puzzleSetupScreen = new PuzzleSetupScreen(appEl, fox, (image, pieces) => {
@@ -166,19 +192,48 @@ const puzzleSetupScreen = new PuzzleSetupScreen(appEl, fox, (image, pieces) => {
 });
 
 const puzzleGameScreen = new PuzzleGameScreen(appEl, fox, () => {
-  // Puzzle complete
   hideBackButton();
   showScene();
   screenManager.navigate('welcome');
 });
 
-// Register screens
+const mazeScreen = new MazeScreen(appEl, fox);
+
+const simonScreen = new SimonScreen(appEl, fox);
+
+const countingSetupScreen = new CountingSetupScreen(appEl, fox, (mode, max) => {
+  countingGameScreen.setup(mode, max);
+  screenManager.navigate('counting-game');
+});
+
+const countingGameScreen = new CountingGameScreen(appEl, fox, () => {
+  hideBackButton();
+  screenManager.navigate('welcome');
+});
+
+const memorySetupScreen = new MemorySetupScreen(appEl, fox, (pairs, difficulty) => {
+  memoryGameScreen.setup(pairs, difficulty);
+  screenManager.navigate('memory-game');
+});
+
+const memoryGameScreen = new MemoryGameScreen(appEl, fox, () => {
+  hideBackButton();
+  screenManager.navigate('welcome');
+});
+
+// Register all screens
 screenManager.register('welcome', welcomeScreen);
 screenManager.register('quiz', quizScreen);
 screenManager.register('oral', oralScreen);
 screenManager.register('result', resultScreen);
 screenManager.register('puzzle-setup', puzzleSetupScreen);
 screenManager.register('puzzle-game', puzzleGameScreen);
+screenManager.register('maze', mazeScreen);
+screenManager.register('simon', simonScreen);
+screenManager.register('counting-setup', countingSetupScreen);
+screenManager.register('counting-game', countingGameScreen);
+screenManager.register('memory-setup', memorySetupScreen);
+screenManager.register('memory-game', memoryGameScreen);
 
 // Start
 sceneManager.start();
