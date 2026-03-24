@@ -4,13 +4,15 @@ import { createBigButton } from './components/BigButton';
 import { COLORS } from '../utils/constants';
 import { ensureAudioContext } from '../audio/SoundEffects';
 
+export type GameMode = 'quiz' | 'oral';
+
 export class WelcomeScreen implements Screen {
   private appEl: HTMLElement;
   private fox: Fox;
-  private onPlay: () => void;
+  private onPlay: (mode: GameMode) => void;
   private container: HTMLDivElement | null = null;
 
-  constructor(appEl: HTMLElement, fox: Fox, onPlay: () => void) {
+  constructor(appEl: HTMLElement, fox: Fox, onPlay: (mode: GameMode) => void) {
     this.appEl = appEl;
     this.fox = fox;
     this.onPlay = onPlay;
@@ -27,14 +29,26 @@ export class WelcomeScreen implements Screen {
 
     const subtitle = document.createElement('div');
     subtitle.className = 'game-subtitle';
-    subtitle.textContent = 'Apprends les lettres !';
+    subtitle.textContent = 'Choisis ton jeu !';
     this.container.appendChild(subtitle);
 
-    const playBtn = createBigButton('Jouer !', COLORS.correct, () => {
+    const btnRow = document.createElement('div');
+    btnRow.className = 'choices-row';
+    btnRow.style.marginTop = '20px';
+
+    const listenBtn = createBigButton('\uD83D\uDD0A \u00C9coute', COLORS.secondary, () => {
       ensureAudioContext();
-      this.onPlay();
+      this.onPlay('quiz');
     });
-    this.container.appendChild(playBtn);
+
+    const readBtn = createBigButton('\uD83D\uDCD6 Lecture', COLORS.correct, () => {
+      ensureAudioContext();
+      this.onPlay('oral');
+    });
+
+    btnRow.appendChild(listenBtn);
+    btnRow.appendChild(readBtn);
+    this.container.appendChild(btnRow);
 
     this.appEl.appendChild(this.container);
     requestAnimationFrame(() => this.container?.classList.add('active'));

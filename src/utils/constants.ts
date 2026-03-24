@@ -24,5 +24,5 @@ export const BUTTON_COLORS = [
 export const SRS_INTERVALS = [1, 5, 15, 60, 360, 1440, 4320]; // minutes
 
 export const SESSION_SIZE = 10;
-export const INITIAL_ACTIVE_LETTERS = 4;
+export const INITIAL_ACTIVE_LETTERS = 26;
 export const MAX_CHOICES = 4;

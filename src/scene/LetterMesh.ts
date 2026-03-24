@@ -42,9 +42,11 @@ export class LetterMesh {
     }
 
     const font = await loadFont();
+    const isMobile = window.innerWidth < 600;
+    const letterSize = isMobile ? 1.5 : 2.5;
     const geometry = new TextGeometry(letter, {
       font,
-      size: 2.5,
+      size: letterSize,
       depth: 0.5,
       curveSegments: 12,
       bevelEnabled: true,

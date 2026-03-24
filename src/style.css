@@ -107,12 +107,12 @@ html, body {
 
 .star-counter {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 32px;
+  gap: 6px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-star);
   z-index: 10;
@@ -121,7 +121,32 @@ html, body {
 }
 
 .star-counter .star-icon {
-  font-size: 40px;
+  font-size: 30px;
+}
+
+/* Back button */
+.back-button {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  font-family: var(--font-family);
+  font-size: 20px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 12px;
+  color: var(--color-white);
+  background: rgba(0,0,0,0.2);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.15s;
+}
+
+.back-button:active {
+  background: rgba(0,0,0,0.35);
 }
 
 .fox-container {
@@ -276,6 +301,30 @@ html, body {
 @keyframes tail-wag {
   0%, 100% { transform: rotate(-10deg); }
   50% { transform: rotate(15deg); }
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .game-title { font-size: 36px; margin-bottom: 20px; }
+  .game-subtitle { font-size: 18px; }
+  .letter-prompt { font-size: 24px; }
+  .big-button { font-size: 22px; min-height: 60px; min-width: 120px; padding: 12px 20px; border-radius: 16px; }
+  .letter-button { font-size: 36px; width: 76px; height: 76px; border-radius: 16px; }
+  .choices-row { gap: 10px; margin-top: 20px; }
+  .result-stars { font-size: 48px; }
+  .result-message { font-size: 22px; }
+  .fox-container { width: 100px; height: 120px; bottom: 10px; left: 10px; }
+  .speech-bubble { font-size: 14px; padding: 8px 12px; }
+  .screen { padding: 12px; }
+}
+
+@media (max-height: 500px) {
+  .game-title { font-size: 32px; margin-bottom: 10px; }
+  .letter-prompt { font-size: 20px; }
+  .big-button { min-height: 50px; font-size: 20px; padding: 10px 16px; }
+  .letter-button { width: 64px; height: 64px; font-size: 30px; }
+  .fox-container { width: 80px; height: 100px; }
+  .screen { padding-bottom: 40px !important; }
 }
 
 .bounce-in { animation: bounce-in 0.5s ease-out both; }

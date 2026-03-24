@@ -4,7 +4,7 @@ import type { ParticleSystem } from '../scene/Particles';
 import { createBigButton } from './components/BigButton';
 import { COLORS } from '../utils/constants';
 import { playCelebration } from '../audio/SoundEffects';
-import { sayPhrase } from '../audio/SpeechManager';
+// Voice phrases removed
 
 export class ResultScreen implements Screen {
   private appEl: HTMLElement;
@@ -79,7 +79,7 @@ export class ResultScreen implements Screen {
     this.particles.emitConfetti(30);
     this.fox.setState('happy');
     this.fox.speak('Super champion !', 3000);
-    sayPhrase('Super champion !');
+    // Voice removed - just sound + fox speech bubble
   }
 
   exit() {

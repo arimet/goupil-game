@@ -6,7 +6,7 @@ import type { StarCounter } from './components/StarCounter';
 import type { SRSEngine } from '../srs/SRSEngine';
 import { createLetterButton, shakeButton, disableButton } from './components/LetterButton';
 import { shuffle } from '../utils/shuffle';
-import { sayLetter, sayPhrase } from '../audio/SpeechManager';
+import { sayLetter } from '../audio/SpeechManager';
 import { playCorrect, playTap } from '../audio/SoundEffects';
 import * as THREE from 'three';
 
@@ -55,10 +55,27 @@ export class QuizScreen implements Screen {
     this.container.style.justifyContent = 'flex-end';
     this.container.style.paddingBottom = '80px';
 
+    // No 3D letter shown - only voice prompt
     const prompt = document.createElement('div');
     prompt.className = 'letter-prompt';
-    prompt.textContent = `Trouve la lettre ${this._letter}`;
+    prompt.textContent = 'Quelle lettre dit Goupil ?';
     this.container.appendChild(prompt);
+
+    // Replay button to hear the letter again
+    const replayBtn = document.createElement('button');
+    replayBtn.className = 'big-button replay-btn';
+    replayBtn.textContent = '\uD83D\uDD0A \u00C9coute encore';
+    replayBtn.style.backgroundColor = '#A78BFA';
+    replayBtn.style.fontSize = '20px';
+    replayBtn.style.minHeight = '50px';
+    replayBtn.style.minWidth = '120px';
+    replayBtn.style.padding = '10px 20px';
+    replayBtn.style.marginTop = '12px';
+    replayBtn.addEventListener('click', () => {
+      sayLetter(this._letter);
+      this.fox.speak(`${this._letter} !`, 1500);
+    });
+    this.container.appendChild(replayBtn);
 
     const choicesRow = document.createElement('div');
     choicesRow.className = 'choices-row';
@@ -72,12 +89,9 @@ export class QuizScreen implements Screen {
     this.appEl.appendChild(this.container);
     requestAnimationFrame(() => this.container?.classList.add('active'));
 
-    // Show target letter in 3D
-    this.letterMesh.setLetter(this._letter).then(() => {
-      this.letterMesh.animateIn();
-    });
-
+    // Fox says the letter via voice
     this.fox.setState('idle');
+    this.fox.speak(`${this._letter} !`, 2500);
     sayLetter(this._letter);
   }
 
@@ -86,13 +100,18 @@ export class QuizScreen implements Screen {
     playTap();
 
     if (chosen === this._letter) {
-      // Correct!
+      // Correct! Now show the 3D letter as reward
       this.answered = true;
       playCorrect();
       this.fox.setState('happy');
       this.fox.speak('Bravo !', 2000);
-      sayPhrase('Bravo !');
-      this.letterMesh.celebrateWiggle();
+      // Voice feedback removed - just sound effects
+
+      // Show the 3D letter as celebration
+      this.letterMesh.setLetter(this._letter).then(() => {
+        this.letterMesh.animateIn();
+        this.letterMesh.celebrateWiggle();
+      });
 
       // Particles
       this.particles.emitStars(new THREE.Vector3(0, 1, 0));
@@ -117,6 +136,8 @@ export class QuizScreen implements Screen {
       disableButton(btn);
       this.fox.setState('encourage');
       this.fox.speak('Essaie encore !', 2000);
+      // Re-say the letter to help
+      setTimeout(() => sayLetter(this._letter), 1000);
     }
   }
 

@@ -82,7 +82,7 @@ export class SRSEngine {
       }
     }
 
-    return result.slice(0, SESSION_SIZE);
+    return shuffle(result.slice(0, SESSION_SIZE));
   }
 
   private justIntroduced = new Set<string>();

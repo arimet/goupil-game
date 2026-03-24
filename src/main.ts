@@ -7,9 +7,9 @@ import { Fox } from './mascot/Fox';
 import { SRSEngine } from './srs/SRSEngine';
 import { ScreenManager } from './screens/ScreenManager';
 import { StarCounter } from './screens/components/StarCounter';
-import { WelcomeScreen } from './screens/WelcomeScreen';
-import { PresentScreen } from './screens/PresentScreen';
+import { WelcomeScreen, type GameMode } from './screens/WelcomeScreen';
 import { QuizScreen } from './screens/QuizScreen';
+import { OralScreen } from './screens/OralScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import type { LetterCard } from './srs/LetterCard';
 import { MAX_CHOICES } from './utils/constants';
@@ -26,7 +26,7 @@ sceneManager.addToScene(letterMesh.getGroup());
 const particles = new ParticleSystem();
 sceneManager.addToScene(particles.getGroup());
 
-// Particle update loop (separate from Three.js render loop)
+// Particle update loop
 let lastTime = performance.now();
 function gameLoop() {
   requestAnimationFrame(gameLoop);
@@ -44,7 +44,26 @@ const srsEngine = new SRSEngine();
 
 // Star counter
 const starCounter = new StarCounter();
-starCounter.setCount(srsEngine.totalStars);
+
+// Back button
+const backBtn = document.createElement('button');
+backBtn.className = 'back-button';
+backBtn.textContent = '\u2190 Menu';
+backBtn.style.display = 'none';
+document.body.appendChild(backBtn);
+
+function showBackButton() { backBtn.style.display = 'block'; }
+function hideBackButton() { backBtn.style.display = 'none'; }
+
+function goToMenu() {
+  sessionActive = false;
+  letterMesh.clear();
+  starCounter.hide();
+  hideBackButton();
+  screenManager.navigate('welcome');
+}
+
+backBtn.addEventListener('click', goToMenu);
 
 // App element
 const appEl = document.getElementById('app')!;
@@ -56,81 +75,79 @@ const screenManager = new ScreenManager(appEl);
 let sessionCards: LetterCard[] = [];
 let sessionIndex = 0;
 let sessionStars = 0;
+let currentMode: GameMode = 'quiz';
+let sessionActive = false;
 
-function startSession() {
+function startSession(mode: GameMode) {
+  currentMode = mode;
   sessionCards = srsEngine.getSessionCards();
   sessionIndex = 0;
   sessionStars = 0;
 
   if (sessionCards.length === 0) {
-    // No cards due, reset and try again
     srsEngine.reset();
     sessionCards = srsEngine.getSessionCards();
   }
 
+  sessionActive = true;
+  starCounter.setCount(0);
   starCounter.show();
+  showBackButton();
   advanceSession();
 }
 
 function advanceSession() {
+  if (!sessionActive) return;
   if (sessionIndex >= sessionCards.length) {
-    // Session complete
     srsEngine.completeSession();
     starCounter.hide();
+    hideBackButton();
     resultScreen.setStars(sessionStars);
     screenManager.navigate('result');
     return;
   }
 
   const card = sessionCards[sessionIndex];
-  const isNew = srsEngine.isNewLetter(card.letter);
 
-  if (isNew) {
-    presentScreen.setLetter(card.letter);
-    screenManager.navigate('present');
+  if (currentMode === 'oral') {
+    oralScreen.setLetter(card.letter);
+    screenManager.navigate('oral');
   } else {
-    showQuiz(card.letter);
+    const distractors = srsEngine.getDistractors(card.letter, MAX_CHOICES - 1);
+    quizScreen.setQuestion(card.letter, distractors);
+    screenManager.navigate('quiz');
   }
 }
 
-function showQuiz(letter: string) {
-  const distractors = srsEngine.getDistractors(letter, MAX_CHOICES - 1);
-  quizScreen.setQuestion(letter, distractors);
-  screenManager.navigate('quiz');
+function onAnswer(correct: boolean) {
+  if (correct) sessionStars++;
+  sessionIndex++;
+  advanceSession();
 }
 
 // Screens
 const welcomeScreen = new WelcomeScreen(appEl, fox, startSession);
 
-const presentScreen = new PresentScreen(appEl, fox, letterMesh, () => {
-  // After presenting, go to quiz for same letter
-  const card = sessionCards[sessionIndex];
-  showQuiz(card.letter);
-});
-
 const quizScreen = new QuizScreen(
-  appEl,
-  fox,
-  letterMesh,
-  particles,
-  starCounter,
-  srsEngine,
-  (correct: boolean) => {
-    if (correct) sessionStars++;
-    sessionIndex++;
-    advanceSession();
+  appEl, fox, letterMesh, particles, starCounter, srsEngine, onAnswer,
+);
+
+const oralScreen = new OralScreen(
+  appEl, fox, letterMesh, particles, starCounter, srsEngine, onAnswer,
+);
+
+const resultScreen = new ResultScreen(appEl, fox, particles,
+  () => screenManager.navigate('welcome'), // Rejouer → retour accueil pour choisir le mode
+  () => {
+    starCounter.hide();
+    screenManager.navigate('welcome');
   },
 );
 
-const resultScreen = new ResultScreen(appEl, fox, particles, startSession, () => {
-  starCounter.hide();
-  screenManager.navigate('welcome');
-});
-
 // Register screens
 screenManager.register('welcome', welcomeScreen);
-screenManager.register('present', presentScreen);
 screenManager.register('quiz', quizScreen);
+screenManager.register('oral', oralScreen);
 screenManager.register('result', resultScreen);
 
 // Start
