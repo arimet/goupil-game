@@ -11,6 +11,8 @@ import { WelcomeScreen, type GameMode } from './screens/WelcomeScreen';
 import { QuizScreen } from './screens/QuizScreen';
 import { OralScreen } from './screens/OralScreen';
 import { ResultScreen } from './screens/ResultScreen';
+import { PuzzleSetupScreen } from './screens/PuzzleSetupScreen';
+import { PuzzleGameScreen } from './screens/PuzzleGameScreen';
 import type { LetterCard } from './srs/LetterCard';
 import { MAX_CHOICES } from './utils/constants';
 
@@ -55,11 +57,15 @@ document.body.appendChild(backBtn);
 function showBackButton() { backBtn.style.display = 'block'; }
 function hideBackButton() { backBtn.style.display = 'none'; }
 
+function showScene() { canvas.style.display = 'block'; }
+function hideScene() { canvas.style.display = 'none'; }
+
 function goToMenu() {
   sessionActive = false;
   letterMesh.clear();
   starCounter.hide();
   hideBackButton();
+  showScene();
   screenManager.navigate('welcome');
 }
 
@@ -79,6 +85,13 @@ let currentMode: GameMode = 'quiz';
 let sessionActive = false;
 
 function startSession(mode: GameMode) {
+  if (mode === 'puzzle') {
+    hideScene();
+    showBackButton();
+    screenManager.navigate('puzzle-setup');
+    return;
+  }
+
   currentMode = mode;
   sessionCards = srsEngine.getSessionCards();
   sessionIndex = 0;
@@ -137,18 +150,35 @@ const oralScreen = new OralScreen(
 );
 
 const resultScreen = new ResultScreen(appEl, fox, particles,
-  () => screenManager.navigate('welcome'), // Rejouer → retour accueil pour choisir le mode
+  () => screenManager.navigate('welcome'),
   () => {
     starCounter.hide();
     screenManager.navigate('welcome');
   },
 );
 
+const puzzleSetupScreen = new PuzzleSetupScreen(appEl, fox, (image, pieces) => {
+  puzzleGameScreen.setup(image, pieces);
+  screenManager.navigate('puzzle-game');
+}, (engine) => {
+  puzzleGameScreen.setupFromSave(engine);
+  screenManager.navigate('puzzle-game');
+});
+
+const puzzleGameScreen = new PuzzleGameScreen(appEl, fox, () => {
+  // Puzzle complete
+  hideBackButton();
+  showScene();
+  screenManager.navigate('welcome');
+});
+
 // Register screens
 screenManager.register('welcome', welcomeScreen);
 screenManager.register('quiz', quizScreen);
 screenManager.register('oral', oralScreen);
 screenManager.register('result', resultScreen);
+screenManager.register('puzzle-setup', puzzleSetupScreen);
+screenManager.register('puzzle-game', puzzleGameScreen);
 
 // Start
 sceneManager.start();

@@ -4,7 +4,7 @@ import { createBigButton } from './components/BigButton';
 import { COLORS } from '../utils/constants';
 import { ensureAudioContext } from '../audio/SoundEffects';
 
-export type GameMode = 'quiz' | 'oral';
+export type GameMode = 'quiz' | 'oral' | 'puzzle';
 
 export class WelcomeScreen implements Screen {
   private appEl: HTMLElement;
@@ -24,7 +24,7 @@ export class WelcomeScreen implements Screen {
 
     const title = document.createElement('div');
     title.className = 'game-title';
-    title.textContent = "Goupil's ABCs";
+    title.textContent = 'Goupil Games';
     this.container.appendChild(title);
 
     const subtitle = document.createElement('div');
@@ -46,8 +46,14 @@ export class WelcomeScreen implements Screen {
       this.onPlay('oral');
     });
 
+    const puzzleBtn = createBigButton('\uD83E\uDDE9 Puzzle', '#A78BFA', () => {
+      ensureAudioContext();
+      this.onPlay('puzzle');
+    });
+
     btnRow.appendChild(listenBtn);
     btnRow.appendChild(readBtn);
+    btnRow.appendChild(puzzleBtn);
     this.container.appendChild(btnRow);
 
     this.appEl.appendChild(this.container);
