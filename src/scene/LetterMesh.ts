@@ -11,7 +11,7 @@ async function loadFont(): Promise<Font> {
   const loader = new FontLoader();
   return new Promise((resolve, reject) => {
     loader.load(
-      'https://cdn.jsdelivr.net/npm/three@0.183.2/examples/fonts/helvetiker_bold.typeface.json',
+      `${import.meta.env.BASE_URL}helvetiker_bold.typeface.json`,
       (font) => {
         cachedFont = font;
         resolve(font);
